@@ -7,4 +7,4 @@
                     Add testing for imaginary base numbers.
                     Add testing for array and hash encoded numbers. 
                     Add underscore capability for numeric strings.
-                    Add tests for mumeric strings containing underscore.
+                    Add tests for numeric strings containing underscore.

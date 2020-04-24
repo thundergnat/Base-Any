@@ -74,7 +74,7 @@ multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision =
 }
 
 
-# Complex radicies
+# Imaginary radicies
 multi to-base ( Numeric $num, Complex $radix where *.re == 0, :$precision = -12 ) is export {
     die "Sorry. Only supports complex bases -66i through -2i and 2i through 66i." if 66 < $radix.abs or 1 > $radix.abs;
     my ($re, $im) = $num.Complex.reals;
@@ -350,7 +350,7 @@ HASH ENCODED
   + :whole(An array of the whole portion positive orders of magnitude in base 10)
   + :fraction(An array of the fractional portion negative orders of magnitude in base 10)
 
-For Illustration, using base 10 to make it easier to follow:
+For illustration, using base 10 to make it easier to follow:
 
     my %hash = 123456789.987654321.&to-base-hash(10);
 

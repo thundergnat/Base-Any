@@ -102,7 +102,7 @@ HASH ENCODED
     + :whole(An array of the whole portion positive orders of magnitude in base 10)
     + :fraction(An array of the fractional portion negative orders of magnitude in base 10)
 
-For Illustration, using base 10 to make it easier to follow:
+For illustration, using base 10 to make it easier to follow:
 
     my %hash = 123456789.987654321.&to-base-hash(10);
 
