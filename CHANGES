@@ -1,0 +1,10 @@
+2020-04-23 V0.0.1 - Initial version. Bugs, but mostly works.
+
+2020-04-23 V0.0.2 - Mostly Doc fixes. Add build status image, fix typos, Expand docs a bit.
+
+2020-04-24 V0.0.3 - Bug fix for array encoding negative numbers with positive radix.
+                    Clean up and rewrite major portions of the Docs. 
+                    Add testing for imaginary base numbers.
+                    Add testing for array and hash encoded numbers. 
+                    Add underscore capability for numeric strings.
+                    Add tests for mumeric strings containing underscore.
