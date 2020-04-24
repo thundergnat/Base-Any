@@ -11,39 +11,90 @@ SYNOPSIS
 ```perl6
 use Base::Any;
 
+# Regular positive and negative bases
+
 say 123456789.&to-base(1391); # À୧Ꮣ
 
 say 'À୧Ꮣ'.&from-base(1391); # 123456789
+
+say 6576148.249614.&to-base( 62, :precision(-3) ); # Raku.FTW
+
+say 99999.&to-base(-10); # 1900019
+
+say '1900019'.&from-base(-10); # 99999
+
+say (2**256).&to-base(1000); # õѶÛŰǄņȳΖՀ8ЍӱһƐԿϷϝΐdɕΥ7ӷĄϜԎ
+
+
+# Imaginary bases
+
+say (5+5i).&to-base(-3i); # 1085.6
+
+say (227.65625+10.859375i).&to-base(37i, :precision(-6)); # 1ŧ.Ԯɣ২Άí೭ÂႬ௫ǚȣᎴ
+
+say 'Rakudo'.&from-base(6i).round(1e-8); # 11904+205710i
+
+
+# Hash encoded
+
+say (2**256).&to-base-hash(10000);
+#`{
+    whole    => [11 5792 892 3731 6195 4235 7098 5008 6879 785 3269 9846 6564 564 394 5758 4007 9131 2963 9936],
+    fraction => [0],
+    base     => 10000
+  }
+
+
+# Array encoded
+
+say (-2**256).&to-base-array(10000);
+# ( [-11 -5792 -892 -3731 -6195 -4235 -7098 -5008 -6879 -785 -3269 -9846 -6564 -564 -394 -5758 -4007 -9131 -2963 -9936] [0] 10000 )
 ```
 
 DESCRIPTION
 ===========
 
-Base::Any provides convenient tools to transform numbers to and from nearly any non-encoding base. (An encoding base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME64, Base58check. etc.)
+Base::Any provides convenient tools to transform numbers to and from nearly any non-streaming base. (A streaming base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME Base32, Base64, Base85, etc.) Nor does it handle some specialized bases with customized glyph sets and attached checksums: e.g. Bitcoin Base58check. (It could be used in calculating Base58 with the correct mapped glyph set, but doesn't do it by default.)
 
-For general base conversion, handles positive bases 2 through 4482, negative bases -4482 through -2, imaginary bases -66 through -2 and 2 through 66.
+For general base conversion, handles positive bases 2 through 4482, negative bases -4482 through -2, imaginary bases -66i through -2i and 2i through 66i.
 
-The rather arbitrary threshold of 4482 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first BMP planes. Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number.
+The rather arbitrary threshold of 4482 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
 
-If 4482 bases is not enough, also provides array encoded numbers to any magnitude base imaginable.
+If 4482 bases is not enough, also provides array encoded numbers to nearly any imaginable magnitude integer base.
 
-You may also easily choose to map the arrays to your own selection of glyphs to enumerate a custom base definition. The default glyph set is enumerated in the file `Base::Any::Digits`.
+You may also choose to map the arrays to your own selection of glyphs to enumerate a custom base definition. The default glyph set is enumerated in the file `Base::Any::Digits`.
 
-Basic usage:
+UNDERSCORE SEPARATORS
 
-    sub to-base(Real $number, Integer $radix, :$prec = -16)
+Raku allows underscores in numeric values as a visual aid to keep track of orders of magnitude. Since the numbers fed to the `to-base()` routine are standard Raku numerics, Base::Any will automatically allow them as well. The `from-base()` routines take strings however, and normally underscores would be disallowed; this module has code to specifically allow (and ignore) underscores in numeric strings. Something like this would be valid:
 
-* Where $radix is ±2 through ±4482. Works with any Real type value, though Rats and Nums will have limited precision in the less significant digits. You may set a precision (:prec) parameter if desired. Defaults to -16 (1e-16).
+    say 'Raku_Rocks'.from-base(62); # 6024625501917586
+
+equivalent to:
+
+    say 'RakuRocks'.from-base(62); # 6024625501917586
+
+BASIC USAGE:
+
+    sub to-base(Real $number, Integer $radix, :$precision = -15)
+
+* Where $radix is ±2 through ±4482. Works with any Real type value, though Rats and Nums will have limited precision in the less significant digits. You may set a precision parameter if desired. Defaults to -15 (1e-15). Negative base numbers are encoded to always produce a positive result. Technically, there is no such thing as a negative Negative based number.
 
 --
 
     sub from-base(Str $number, Integer $radix)
 
-* Where $radix is ±2 through ±4482. Needs a String of the encoded number. Returns the number encoded in base 10.
+* Where $radix is ±2 through ±4482. Takes a String of the encoded number. Returns the number encoded in base 10.
+
+IMAGINARY BASES
+
+`sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex, (any Real portion must be zero,) and it will only handle radicies ±2i through ±66i. The number to convert may be any positive or negative Complex number. Imaginary base encoded numbers never produce a negative or imaginary result.
+
+There is no support at this time for imaginary radices in the `to-base-hash` or `to-base-array` routines. The imaginary bases in general seem to be more of a curiosity than of any great use.
 
 HASH ENCODED
 
-    sub to-base-hash(Real $number, Integer $radix, :$prec = -16)
+    sub to-base-hash(Real $number, Integer $radix, :$precision = -15)
 
 * Where $radix is any non ±1 or 0 Integer. Returns a hash with 3 elements:
 
@@ -53,51 +104,53 @@ HASH ENCODED
 
 For Illustration, using base 10 to make it easier to follow:
 
-    say my %h = 123456789.0987654321.&to-base-hash(10);
+    my %hash = 123456789.987654321.&to-base-hash(10);
 
-    yields:
+yields:
 
-    {base => 10, fraction => [0 0 9 8 7 6 5 4 3 2 1], whole => [1 2 3 4 5 6 7 8 9]}
+    {base => 10, fraction => [0 9 8 7 6 5 4 3 2 1], whole => [1 2 3 4 5 6 7 8 9]}
 
-The 'whole' array is in reverse order, the most significant 'digit' is to the left, the least significant to the right. Each 'digit' is the value in that position encoded in base 10. To convert it to a number, reverse the array, multiply each element by the corresponding order of magnitude then sum the values.
+The 'whole' array is in reverse order, the most significant 'digit' is to the left, the least significant to the right. Each 'digit' is the value in that position (order-of-magnitude) encoded in base 10. To convert it to a number, reverse the array, multiply each element by the corresponding order of magnitude then sum the values.
 
-    sum %h<whole>.reverse.kv.map( {$^v * (%h<base> ** $^k)} )
+    sum %hash<whole>.reverse.kv.map( { $^value * (%hash<base> ** $^key) } );
 
     123456789
 
-Do the same thing with the fractional portion. The fraction array is not reversed. The least significant is to the left, most significant to the right. The first element is always zero so you don't need to worry about skipping it. Do the same operation but with negative powers of the radix.
+Do the same thing with the fractional portion. The 'fraction' array is not reversed. The least significant is to the left, most significant to the right. The first element is always zero so you don't need to worry about skipping it. Do the same operation but with negative powers of the radix.
 
-    sum %h<fraction>.kv.map( {$^v * (%h<base> ** -$^k)}
+    sum %hash<fraction>.kv.map( { $^value * (%hash<base> ** -$^key) } );
 
-    0.0987654321
+    0.987654321
 
 Add the whole and fractional parts together and you get the original number back.
 
-    123456789 + 0.0987654321 == 123456789.0987654321
+    123456789 + 0.987654321 == 123456789.987654321
 
-There is a provided `sub from-base-hash()` that does exactly this operation so you don't need to do it manually. This was just exposition to make it easier to understand the process.
+There is a provided sub `from-base-hash()` that does exactly this operation, so you don't need to do it manually. This was exposition to make it easier to understand what is going on behind the scenes.
+
+    sub from-base-hash( { :whole(@whole), :fraction(@fraction), :base($base) } )
 
 Round trip:
 
-    say my %h = 123456789.0987654321.&to-base-hash(10).&from-base-hash;
+    say 123456789.987654321.&to-base-hash(10).&from-base-hash;
 
-    123456789.0987654321
+    123456789.987654321
 
 ARRAY ENCODED
 
-In the same vein, there is a provided set of subs that work with arrays.
+In the same vein, there is a set of subs that work with arrays.
 
-    sub to-base-array(Real $number, Integer $radix, :$prec = -16)
+    sub to-base-array( Real $number, Integer $radix, :$precision = -15 )
 
 and
 
-    sub from-base-array()
+    sub from-base-array( [ @whole, @fraction, $base ] )
 
-They do very nearly the same thing except they return the base, whole Array and fraction Array as a list of three positionals rather than a hash of named values. They work pretty much exactly the same way though.
+They do very nearly the same thing except they return the 'whole' Array, the 'fraction' Array and the base as a list of three positionals rather than a hash of named values. They work pretty much identically though.
 
-IMAGINARY BASES
+Note that both the `to-base-hash()` and `to-base-array()` include the base as part of the encoded number so it is already include when round-tripping.
 
-`sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex. (Any Real portion must be zero.) And it only handles radicies ±2i through ±66i. There is not at this time imaginary support in the `to-base-hash` or `to-base-array` routines. The imaginary bases are more of a curiosity than of great use.
+Be aware. There are some twenty-one thousand and some odd tests done during install to exercise the module. Testing takes a while. Theoretically, the tests are highly parallelizable but the present ecosystem tooling doesn't seem to like it.
 
 AUTHOR
 ======
