@@ -5,6 +5,8 @@ use Base::Any::Digits;
 
 my %base = @__base-any-digits.pairs;
 
+plan 8798;
+
 my $n = 10000000000.rand;
 for -4400..-2 {
     my $b = ($n).&to-base-hash($_);
