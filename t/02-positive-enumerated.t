@@ -5,10 +5,10 @@ use Base::Any::Digits;
 
 my %base = @__base-any-digits.pairs;
 
-plan 8798;
+plan 9028;
 
 my $n = 10000000000.rand;
-for 2..4400 {
+for 2..4515 {
     my $b = ($n).&to-base-hash($_);
     is-approx ($n).&to-base-hash($_).&from-base-hash, $n, "$n base $_ - roundtrip";
     my $hash = join '', %base{ |$b<whole>>>.Str }, '.', %base{ $b<fraction>.skip(1)>>.Str };
