@@ -1,5 +1,5 @@
 use v6.c;
-unit module Base::Any:ver<0.0.3>;
+unit module Base::Any:ver<0.0.4>;
 
 use Base::Any::Digits; # import @__base-any-digits
 
@@ -129,7 +129,7 @@ multi from-base ( Str $str, Complex $radix where *.re == 0 ) is export {
 # Positive Integer radix and Int number - faster for the common case
 # Precision is ignored for Integers
 multi to-base-hash ( Int $num, Int $radix where 1 < *,  :$precision ) {
-    { :whole([$num.abs.polymod( $radix xx * ).reverse »*» $num.sign]), :fraction([0]), :base($radix) }
+    { :whole([$num.abs.polymod( $radix xx * ).reverse »*» $num.sign || 0]), :fraction([0]), :base($radix) }
 }
 
 
@@ -137,7 +137,7 @@ multi to-base-hash ( Int $num, Int $radix where 1 < *,  :$precision ) {
 multi to-base-hash ( Real $num, Int $radix where * > 1, :$precision = -15 ) is export {
     my @whole;
     my @fraction = 0;
-    return ([0], [0]) unless $num;
+    return { :whole([0]), :fraction([0]), :base($radix) } unless +$num;
     my $value  = $num.abs;
     my $sign = $num.sign;
     my $place  = 0;
@@ -164,7 +164,7 @@ multi to-base-hash ( Real $num, Int $radix where * > 1, :$precision = -15 ) is e
 multi to-base-hash ( Real $num, Int $radix where * < -1, :$precision = -15 ) is export {
     my @whole;
     my @fraction = 0;
-    return ([0], [0]) unless $num;
+    return { :whole([0]), :fraction([0]), :base($radix) } unless +$num;
     my $value  = $num;
     my $place  = 0;
     my $upper-bound = 1 / (-$radix + 1);
