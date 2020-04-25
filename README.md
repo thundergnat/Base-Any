@@ -48,23 +48,49 @@ say (2**256).&to-base-hash(10000);
 # Array encoded
 
 say (-2**256).&to-base-array(10000);
-# ( [-11 -5792 -892 -3731 -6195 -4235 -7098 -5008 -6879 -785 -3269 -9846 -6564 -564 -394 -5758 -4007 -9131 -2963 -9936] [0] 10000 )
+# ( [-11 -5792 -892 -3731 -6195 -4235 -7098 -5008 -6879 -785 -3269 -9846 -6564 -564 -394 -5758 -4007 -9131 -2963 -9936], [0], 10000 )
 ```
 
 DESCRIPTION
 ===========
 
+Rakudo has built-in operators .base and .parse-base to do base conversions, but they only handle bases 2 through 36.
+
 Base::Any provides convenient tools to transform numbers to and from nearly any non-streaming base. (A streaming base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME Base32, Base64, Base85, etc.) Nor does it handle some specialized bases with customized glyph sets and attached checksums: e.g. Bitcoin Base58check. (It could be used in calculating Base58 with the correct mapped glyph set, but doesn't do it by default.)
 
-For general base conversion, handles positive bases 2 through 4482, negative bases -4482 through -2, imaginary bases -66i through -2i and 2i through 66i.
+For general base conversion, handles positive bases 2 through 4516, negative bases -4516 through -2, imaginary bases -66i through -2i and 2i through 66i.
 
-The rather arbitrary threshold of 4482 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
+The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (There's 4517 actually, but one of them needs to represent zero... and oddly enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
 
-If 4482 bases is not enough, also provides array encoded numbers to nearly any imaginable magnitude integer base.
+If 4516 bases is not enough, also provides array encoded numbers to nearly any imaginable magnitude integer base.
 
 You may also choose to map the arrays to your own selection of glyphs to enumerate a custom base definition. The default glyph set is enumerated in the file `Base::Any::Digits`.
 
-UNDERSCORE SEPARATORS
+#### BASIC USAGE:
+
+    sub to-base(Real $number, Integer $radix, :$precision = -15)
+
+* Where $radix is ±2 through ±4516. Works with any Real type value, though Rats and Nums will have limited precision in the less significant digits. You may set a precision parameter if desired. Defaults to -15 (1e-15). Negative base numbers are encoded to always produce a positive result. Technically, there is no such thing as a negative Negative based number.
+
+--
+
+    sub from-base(Str $number, Integer $radix)
+
+* Where $radix is ±2 through ±4516. Takes a String of the encoded number. Returns the number encoded in base 10.
+
+##### CASE INSENSITIVITY
+
+Base::Any mimics the built-in operators in that bases with an absolute magnitude 36 (-36) and below ignore case when converting `from-base()`.
+
+    'raku'.from-base(36) == 'RAKU'.from-base(36); # 76999005259948
+
+and
+
+    'raku'.from-base(-36) == 'RAKU'.from-base(-36); # 75428091766540
+
+For bases positive 2 through 36, Base::Any just hands off the transform to the built-in commands. A consequence to be aware of: `.&from-base().&to-base()` in radicies ±2 through ±36 may not round-trip to the same string.
+
+##### UNDERSCORE SEPARATORS
 
 Raku allows underscores in numeric values as a visual aid to keep track of orders of magnitude. Since the numbers fed to the `to-base()` routine are standard Raku numerics, Base::Any will automatically allow them as well. The `from-base()` routines take strings however, and normally underscores would be disallowed; this module has code to specifically allow (and ignore) underscores in numeric strings. Something like this would be valid:
 
@@ -74,25 +100,13 @@ equivalent to:
 
     say 'RakuRocks'.from-base(62); # 6024625501917586
 
-BASIC USAGE:
-
-    sub to-base(Real $number, Integer $radix, :$precision = -15)
-
-* Where $radix is ±2 through ±4482. Works with any Real type value, though Rats and Nums will have limited precision in the less significant digits. You may set a precision parameter if desired. Defaults to -15 (1e-15). Negative base numbers are encoded to always produce a positive result. Technically, there is no such thing as a negative Negative based number.
-
---
-
-    sub from-base(Str $number, Integer $radix)
-
-* Where $radix is ±2 through ±4482. Takes a String of the encoded number. Returns the number encoded in base 10.
-
-IMAGINARY BASES
+##### IMAGINARY BASES
 
 `sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex, (any Real portion must be zero,) and it will only handle radicies ±2i through ±66i. The number to convert may be any positive or negative Complex number. Imaginary base encoded numbers never produce a negative or imaginary result.
 
 There is no support at this time for imaginary radices in the `to-base-hash` or `to-base-array` routines. The imaginary bases in general seem to be more of a curiosity than of any great use.
 
-HASH ENCODED
+#### HASH ENCODED
 
     sub to-base-hash(Real $number, Integer $radix, :$precision = -15)
 
@@ -136,7 +150,7 @@ Round trip:
 
     123456789.987654321
 
-ARRAY ENCODED
+#### ARRAY ENCODED
 
 In the same vein, there is a set of subs that work with arrays.
 
@@ -146,11 +160,11 @@ and
 
     sub from-base-array( [ @whole, @fraction, $base ] )
 
-They do very nearly the same thing except they return the 'whole' Array, the 'fraction' Array and the base as a list of three positionals rather than a hash of named values. They work pretty much identically though.
+They do very nearly the same thing except `to-base-array()` returns the 'whole' Array, the 'fraction' Array and the base as a list of three positionals rather than a hash of named values, and `from-base-array()` takes an array of those three positionals. They work pretty much identically internally though. (And in fact, use the exact same code path.)
 
 Note that both the `to-base-hash()` and `to-base-array()` include the base as part of the encoded number so it is already include when round-tripping.
 
-Be aware. There are some twenty-one thousand and some odd tests done during install to exercise the module. Testing takes a while. Theoretically, the tests are highly parallelizable but the present ecosystem tooling doesn't seem to like it.
+Be aware. There are about twenty-two thousand tests done during install to exercise the module. Testing takes a while. Theoretically, the tests are highly parallelizable but the present ecosystem tooling doesn't seem to like it.
 
 AUTHOR
 ======
