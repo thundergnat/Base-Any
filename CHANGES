@@ -13,3 +13,13 @@
                     Add tests for zero encoding.
                     Made positive and negative encoding testing a little more forgiving of imprecision.
                       Was getting sporatic failures in least significant digits of converted Rats.
+
+2020-04-25 V0.0.5 - Made from-base() ignore case in bases -2 <-> -36 (similar to positive bases).
+                    Added tests for ignore case in bases -2 <-> -36.
+                    Trapped errors when trying to from-base() with out-of-range characters.
+                    Test for out-of-range characters.
+                    Detect and test for too many dec\b\b\bradicimal points.
+                    Expanded glyph set a bit (actually, realized that I had miscounted while... ⬋⬋⬋)
+                    Added testing for out-of-range and threshold sized positive/negative radicies.
+
+
