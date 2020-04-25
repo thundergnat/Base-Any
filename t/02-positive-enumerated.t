@@ -14,7 +14,7 @@ for 2..4400 {
     my $hash = join '', %base{ |$b<whole>>>.Str }, '.', %base{ $b<fraction>.skip(1)>>.Str };
     my $direct = $n.&to-base($_);
     my $min = ($hash.chars min $direct.chars) - 3;
-    $min -= 2 if $_.abs < 20;
+    $min -= 2 if $_.abs < 30;
     is $hash.substr(0,$min), $direct.substr(0,$min), "$n base $_: $direct - hash vs direct";
 }
 
