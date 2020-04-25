@@ -8,3 +8,8 @@
                     Add testing for array and hash encoded numbers. 
                     Add underscore capability for numeric strings.
                     Add tests for numeric strings containing underscore.
+
+2020-04-24 V0.0.4 - Bug fix for array/hash encoding zero values incorrectly.
+                    Add tests for zero encoding.
+                    Made positive and negative encoding testing a little more forgiving of imprecision.
+                      Was getting sporatic failures in least significant digits of converted Rats.
