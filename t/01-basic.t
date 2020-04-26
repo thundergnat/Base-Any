@@ -2,7 +2,7 @@ use v6.c;
 use Test;
 use Base::Any;
 
-plan 728;
+plan 734;
 
 for ^10 {
 my $n = 1000.rand;
@@ -50,5 +50,13 @@ dies-ok { '1.23.4'.&from-base(-7) }, 'dies ok invalid, too many radicimal points
 dies-ok { '1.23.4'.&from-base(7) }, 'dies ok invalid, too many radicimal points';
 dies-ok { '1.23.4'.&from-base(47) }, 'dies ok invalid, too many radicimal points';
 dies-ok { '1.23.4'.&from-base(-47) }, 'dies ok invalid, too many radicimal points';
+
+dies-ok { Inf.&to-base(12) }, 'dies ok with Inf, "small" positive base';
+dies-ok { Inf.&to-base(92) }, 'dies ok with Inf, "large" positive base';
+dies-ok { Inf.&to-base(-52) }, 'dies ok with Inf, negative base';
+
+dies-ok { NaN.&to-base(12) }, 'dies ok with NaN, "small" positive base';
+dies-ok { NaN.&to-base(92) }, 'dies ok with NaN, "large" positive base';
+dies-ok { NaN.&to-base(-52) }, 'dies ok with NaN, negative base';
 
 done-testing;
