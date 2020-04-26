@@ -22,4 +22,11 @@
                     Expanded glyph set a bit (actually, realized that I had miscounted while... ⬋⬋⬋)
                     Added testing for out-of-range and threshold sized positive/negative radicies.
 
+2020-04-26 V0.0.6 - Detect and fail when trying to convert Inf or Nan.
+                    Add tests for Inf and NaN.
+                    Add comment to Base::Any::Digits explaining how glyphs were selected.
+                    Expanded glyph set (from v0.0.5) allows for imaginary radicies up to ±67i; adjust limits accordingly.
+                    Various minor formatting / style tweaks
+
+
 
