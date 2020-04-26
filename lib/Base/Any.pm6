@@ -1,5 +1,5 @@
 use v6.c;
-unit module Base::Any:ver<0.0.5>;
+unit module Base::Any:ver<0.0.6>;
 
 use Base::Any::Digits; # import @__base-any-digits
 
@@ -16,23 +16,29 @@ my %active-base = @__base-any-digits[^62].pairs.invert;
 
 # Detect and die for radicies outside the threshold
 multi to-base ( Any $num, Int $radix where * > $threshold ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf;
     die "Sorry, can not convert to base $radix, to-base() only handles up to base { $threshold - 1 }." ~
         " Try to-base-array() or to-bash-hash() maybe?";
  }
 
 
 # Normal base 2 <-> 36
-multi to-base ( Real $num, Int $radix where 1 < * < 37 ) is export { $num.base($radix) }
+multi to-base ( Real $num, Int $radix where 1 < * < 37 ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf; # shouldn't be necessary for Int multis
+    $num.base($radix)
+}
 
 
 # Integer base 37 <-> 4516
 multi to-base ( Int $num, Int $radix where 36 < * <= $threshold ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf; # shouldn't be necessary for Int multis
     @__base-any-digits[$num.polymod( $radix xx * ).reverse].join || '0'
 }
 
 
 # Positive Real base 37 <-> 4516
 multi to-base ( Real $num, Int $radix where 36 < * <= $threshold, :$precision = -15 ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf;
     my $sign = $num < 0 ?? '-' !! '';
     return '0' unless $num;
 
@@ -58,7 +64,9 @@ multi to-base ( Real $num, Int $radix where 36 < * <= $threshold, :$precision = 
 
 # Negative Real base -4516 <-> -2
 multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision = -15 ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf;
     return '0' unless $num;
+
 
     # Adjust active glyph set if necessary
     %active-base = @__base-any-digits[^$radix.abs].pairs.invert if +%active-base < -$radix;
@@ -82,7 +90,8 @@ multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision =
 
 # Imaginary radicies
 multi to-base ( Numeric $num, Complex $radix where *.re == 0, :$precision = -12 ) is export {
-    die "Sorry. Only supports complex bases -66i through -2i and 2i through 66i." if 66 < $radix.abs or 1 > $radix.abs;
+    die "Sorry. Only supports complex bases -67i through -2i and 2i through 67i." if 67 < $radix.abs or 1 > $radix.abs;
+    nan-inf($num) if $num === NaN or $num == Inf;
     my ($re, $im) = $num.Complex.reals;
     my ($re-wh, $re-fr) =             $re.&to-base( -$radix.im².Int, :precision($precision) ).split: '.';
     my ($im-wh, $im-fr) = ($im/$radix.im).&to-base( -$radix.im².Int, :precision($precision) ).split: '.';
@@ -104,7 +113,7 @@ multi to-base ( Numeric $num, Complex $radix where *.re == 0, :$precision = -12 
 # Detect and die for radicies outside the threshold
 multi from-base ( Any $num, Int $radix where * > $threshold ) is export {
     die "Sorry, can not convert to base $radix, from-base() only handles up to base { $threshold - 1 }."
- }
+}
 
 
 # Normal 2 - 36 "parse-base" conversion, let the system handle it
@@ -124,7 +133,7 @@ multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 
     # Adjust active glyph set if necessary
     %active-base = @__base-any-digits[^$radix.abs].pairs.invert if +%active-base < $radix.abs;
 
-    # Detect out-or-range glyphs
+    # Detect out-of-range glyphs
     if my $k = $str.comb.first( { next if $_ eq '.'; !%active-base{$_}.defined or %active-base{$_} >= $radix.abs } ) {
         die "Cannot convert string to number: malformed base $radix number. " ~
             "Character out of range: '\e[32m{ $str.subst(/$k/, "\e[31m$k\e[32m") }\e[0m'"
@@ -132,7 +141,7 @@ multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 
 
     # Do the conversion
     my ($whole, $frac, $die) = $str.split: '.';
-    die "Invalid numeric string. Too many ridicimal points: '\e[32m{ $str.subst(/'.'/, "\e[31m.\e[32m", :g) }\e[0m'" if $die;
+    die "Invalid numeric string. Too many radicimal points: '\e[32m{ $str.subst(/'.'/, "\e[31m.\e[32m", :g) }\e[0m'" if $die;
     my $fraction = 0;
     $fraction = [+] $frac.comb.kv.map: { %active-base{$^v} * $radix ** -($^k+1) } if $frac;
     $fraction + [+] $whole.flip.comb.kv.map: { %active-base{$^v} * $radix ** $^k }
@@ -142,8 +151,9 @@ multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 
 # Imaginary radicies
 multi from-base ( Str $str, Complex $radix where *.re == 0 ) is export {
     return -1 * $str.substr(1).&from-base($radix) if $str.substr(0,1) eq '-'; # technically illegal
+
     my ($whole, $frac, $die) = $str.subst('_', '', :g).split: '.';
-    die "Invalid numeric string. Too many ridicimal points: '\e[32m{ $str.subst(/'.'/, "\e[31m.\e[32m", :g) }\e[0m'" if $die;
+    die "Invalid numeric string. Too many radicimal points: '\e[32m{ $str.subst(/'.'/, "\e[31m.\e[32m", :g) }\e[0m'" if $die;
     my $fraction = 0;
     $fraction = [+] $frac.comb.kv.map: { $^v.&from-base($radix.im².Int) * $radix ** -($^k+1) } if $frac;
     $fraction + [+] $whole.flip.comb.kv.map: { $^v.&from-base($radix.im².Int) * $radix ** $^k }
@@ -162,6 +172,7 @@ multi to-base-hash ( Int $num, Int $radix where 1 < *,  :$precision ) {
 
 # Positive Int radix and Real number
 multi to-base-hash ( Real $num, Int $radix where * > 1, :$precision = -15 ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf;
     my @whole;
     my @fraction = 0;
     return { :whole([0]), :fraction(@fraction), :base($radix) } unless +$num;
@@ -189,6 +200,7 @@ multi to-base-hash ( Real $num, Int $radix where * > 1, :$precision = -15 ) is e
 
 # Negative Int radix and Real number
 multi to-base-hash ( Real $num, Int $radix where * < -1, :$precision = -15 ) is export {
+    nan-inf($num) if $num === NaN or $num == Inf;
     my @whole;
     my @fraction = 0;
     return { :whole([0]), :fraction([0]), :base($radix) } unless +$num;
@@ -234,6 +246,8 @@ sub from-base-array( @p ) is export {
              @p[1]\       .kv.map( {$^v * (@p[2] ** -$^k)} )
 }
 
+
+sub nan-inf ( $num ) { die "Can't convert \e[31m$num\e[0m, (it's \e[31m$num\e[0m in any base anyway)." }
 
 
 =begin pod
@@ -305,7 +319,7 @@ in calculating Base58 with the correct mapped glyph set, but doesn't do it by
 default.)
 
 For general base conversion, handles positive bases 2 through 4516, negative
-bases -4516 through -2, imaginary bases -66i through -2i and 2i through 66i.
+bases -4516 through -2, imaginary bases -67i through -2i and 2i through 67i.
 
 The rather arbitrary threshold of 4516 was chosen because that is how many
 unique and discernible digit and letter glyphs are in the basic and first
@@ -377,9 +391,9 @@ equivalent to:
 
 C<sub to-base()> will also handle converting to imaginary bases. The radix must
 be imaginary, not Complex, (any Real portion must be zero,) and it will only
-handle radicies ±2i through ±66i. The number to convert may be any positive or
+handle radicies ±2i through ±67i. The number to convert may be any positive or
 negative Complex number. Imaginary base encoded numbers never produce a negative
-or imaginary result.
+or complex result.
 
 There is no support at this time for imaginary radices in the C<to-base-hash> or
 C<to-base-array> routines. The imaginary bases in general seem to be more of a
