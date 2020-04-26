@@ -58,7 +58,7 @@ Rakudo has built-in operators .base and .parse-base to do base conversions, but 
 
 Base::Any provides convenient tools to transform numbers to and from nearly any non-streaming base. (A streaming base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME Base32, Base64, Base85, etc.) Nor does it handle some specialized bases with customized glyph sets and attached checksums: e.g. Bitcoin Base58check. (It could be used in calculating Base58 with the correct mapped glyph set, but doesn't do it by default.)
 
-For general base conversion, handles positive bases 2 through 4516, negative bases -4516 through -2, imaginary bases -66i through -2i and 2i through 66i.
+For general base conversion, handles positive bases 2 through 4516, negative bases -4516 through -2, imaginary bases -67i through -2i and 2i through 67i.
 
 The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (There's 4517 actually, but one of them needs to represent zero... and oddly enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
 
@@ -102,7 +102,7 @@ equivalent to:
 
 ##### IMAGINARY BASES
 
-`sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex, (any Real portion must be zero,) and it will only handle radicies ±2i through ±66i. The number to convert may be any positive or negative Complex number. Imaginary base encoded numbers never produce a negative or imaginary result.
+`sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex, (any Real portion must be zero,) and it will only handle radicies ±2i through ±67i. The number to convert may be any positive or negative Complex number. Imaginary base encoded numbers never produce a negative or complex result.
 
 There is no support at this time for imaginary radices in the `to-base-hash` or `to-base-array` routines. The imaginary bases in general seem to be more of a curiosity than of any great use.
 

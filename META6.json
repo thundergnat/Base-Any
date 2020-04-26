@@ -1,6 +1,6 @@
 {
   "perl"          : "6",
-  "version"       : "0.0.5",
+  "version"       : "0.0.6",
   "name"          : "Base::Any",
   "description"   : "Convert numbers to and from nearly any base",
   "authors"       : [ "Steve Schulze (thundergnat)" ],
@@ -13,5 +13,5 @@
   "source-type"   : "git",
   "source-url"    : "git://github.com/thundergnat/base-any.git",
   "license"       : "Artistic-2.0",
-  "tags"          : [ "Base", "Radix" ]
+  "tags"          : [ "Base", "Convert", "Radix" ]
 }
