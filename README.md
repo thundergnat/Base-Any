@@ -56,11 +56,11 @@ DESCRIPTION
 
 Rakudo has built-in operators .base and .parse-base to do base conversions, but they only handle bases 2 through 36.
 
-Base::Any provides convenient tools to transform numbers to and from nearly any non-streaming base. (A streaming base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME Base32, Base64, Base85, etc.) Nor does it handle some specialized bases with customized glyph sets and attached checksums: e.g. Bitcoin Base58check. (It could be used in calculating Base58 with the correct mapped glyph set, but doesn't do it by default.)
+Base::Any provides convenient tools to transform numbers to and from nearly any positional, non-streaming base. (A streaming base is one where characters are packed so that one glyph does not necessarily correspond to one character. E.G. MIME Base32, Base64, Base85, etc.) Nor does it handle some specialized bases with customized glyph sets and attached checksums: e.g. Bitcoin Base58check. (It could be used in calculating Base58 with the correct mapped glyph set, but doesn't do it by default.)
 
 For general base conversion, handles positive bases 2 through 4516, negative bases -4516 through -2, imaginary bases -67i through -2i and 2i through 67i.
 
-The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (There's 4517 actually, but one of them needs to represent zero... and oddly enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
+The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (There's 4517 actually, but one of them needs to represent zero... and conveniently enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
 
 If 4516 bases is not enough, also provides array encoded numbers to nearly any imaginable magnitude integer base.
 
@@ -82,23 +82,23 @@ You may also choose to map the arrays to your own selection of glyphs to enumera
 
 Base::Any mimics the built-in operators in that bases with an absolute magnitude 36 (-36) and below ignore case when converting `from-base()`.
 
-    'raku'.from-base(36) == 'RAKU'.from-base(36); # 76999005259948
+    'raku'.&from-base(36) == 'RAKU'.&from-base(36); # 76999005259948
 
 and
 
-    'raku'.from-base(-36) == 'RAKU'.from-base(-36); # 75428091766540
+    'raku'.&from-base(-36) == 'RAKU'.&from-base(-36); # 75428091766540
 
-For bases positive 2 through 36, Base::Any just hands off the transform to the built-in commands. A consequence to be aware of: `.&from-base().&to-base()` in radicies ±2 through ±36 may not round-trip to the same string.
+For bases positive 2 through 36, Base::Any just hands off the transform to the built-in commands. A consequence to be aware of: `.&from-base().&to-base()` in radicies ±11 through ±36 may not round-trip to the same string.
 
 ##### UNDERSCORE SEPARATORS
 
 Raku allows underscores in numeric values as a visual aid to keep track of orders of magnitude. Since the numbers fed to the `to-base()` routine are standard Raku numerics, Base::Any will automatically allow them as well. The `from-base()` routines take strings however, and normally underscores would be disallowed; this module has code to specifically allow (and ignore) underscores in numeric strings. Something like this would be valid:
 
-    say 'Raku_Rocks'.from-base(62); # 6024625501917586
+    say 'Raku_Rocks'.&from-base(62); # 6024625501917586
 
 equivalent to:
 
-    say 'RakuRocks'.from-base(62); # 6024625501917586
+    say 'RakuRocks'.&from-base(62); # 6024625501917586
 
 ##### IMAGINARY BASES
 
