@@ -130,7 +130,7 @@ The 'whole' array is in reverse order, the most significant 'digit' is to the le
 
     123456789
 
-Do the same thing with the fractional portion. The 'fraction' array is not reversed. The least significant is to the left, most significant to the right. The first element is always zero so you don't need to worry about skipping it. Do the same operation but with negative powers of the radix.
+Do the same thing with the fractional portion. The 'fraction' array is not reversed. The most significant is to the left, least significant to the right. The first element is always zero so you don't need to worry about skipping it. Do the same operation but with negative powers of the radix.
 
     sum %hash<fraction>.kv.map( { $^value * (%hash<base> ** -$^key) } );
 
