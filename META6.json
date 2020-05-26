@@ -1,6 +1,6 @@
 {
   "perl"          : "6",
-  "version"       : "0.0.6",
+  "version"       : "0.0.7",
   "name"          : "Base::Any",
   "description"   : "Convert numbers to and from nearly any base",
   "authors"       : [ "Steve Schulze (thundergnat)" ],

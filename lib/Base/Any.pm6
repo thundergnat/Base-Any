@@ -1,5 +1,5 @@
 use v6.c;
-unit module Base::Any:ver<0.0.6>;
+unit module Base::Any:ver<0.0.7>;
 
 use Base::Any::Digits; # import @__base-any-digits
 

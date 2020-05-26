@@ -28,5 +28,5 @@
                     Expanded glyph set (from v0.0.5) allows for imaginary radicies up to ±67i; adjust limits accordingly.
                     Various minor formatting / style tweaks
 
-
+2020-05-26 v0.0.7 - Limit precision while testing small base conversions. Getting ocassional failures.
 
