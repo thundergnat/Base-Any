@@ -49,6 +49,18 @@ say (2**256).&to-base-hash(10000);
 
 say (-2**256).&to-base-array(10000);
 # ( [-11 -5792 -892 -3731 -6195 -4235 -7098 -5008 -6879 -785 -3269 -9846 -6564 -564 -394 -5758 -4007 -9131 -2963 -9936], [0], 10000 )
+
+# Set a custom digit set
+
+set-digits('ABCDEFGHIJ');
+
+# or
+
+set-digits('A'..'Z');
+
+# Reset to default digit set
+
+reset-digits();
 ```
 
 DESCRIPTION
@@ -80,7 +92,7 @@ You may also choose to map the arrays to your own selection of glyphs to enumera
 
 ##### CASE INSENSITIVITY
 
-Base::Any mimics the built-in operators in that bases with an absolute magnitude 36 (-36) and below ignore case when converting `from-base()`.
+As long as the default digit set is loaded Base::Any mimics the built-in operators, in that bases with an absolute magnitude 36 (-36) and below ignore case when converting `from-base()`.
 
     'raku'.&from-base(36) == 'RAKU'.&from-base(36); # 76999005259948
 
@@ -88,7 +100,9 @@ and
 
     'raku'.&from-base(-36) == 'RAKU'.&from-base(-36); # 75428091766540
 
-For bases positive 2 through 36, Base::Any just hands off the transform to the built-in commands. A consequence to be aware of: `.&from-base().&to-base()` in radicies ±11 through ±36 may not round-trip to the same string.
+A consequence to be aware of: `.&from-base().&to-base()` in radicies ±11 through ±36 may not round-trip to the same string.
+
+If a custom digit set is loaded, Base::Any makes no assumptions about case equivalence.
 
 ##### UNDERSCORE SEPARATORS
 
@@ -105,6 +119,26 @@ equivalent to:
 `sub to-base()` will also handle converting to imaginary bases. The radix must be imaginary, not Complex, (any Real portion must be zero,) and it will only handle radicies ±2i through ±67i. The number to convert may be any positive or negative Complex number. Imaginary base encoded numbers never produce a negative or complex result.
 
 There is no support at this time for imaginary radices in the `to-base-hash` or `to-base-array` routines. The imaginary bases in general seem to be more of a curiosity than of any great use.
+
+#### CUSTOM DIGIT SETS
+
+If you want to use a custom, non-standard digit set, you may easily load a replacement set of glyphs to use for digits.
+
+`sub set-digits(String)` or `sub set-digits(List)` will alter the standard table of digits to whatever you pass in. There are some caveats.
+
+* The string (or list) may not have any repeated glyphs. Repeated glyphs would hinder reversibility.
+
+* Each element (for lists) must have only one character.
+
+* Custom digit sets disable imaginary base number routines. They are too fiddly to deal with possibly "out-of-order" characters.
+
+There is some error trapping but you are given a lot of leeway to shoot yourself in the foot.
+
+Note that the digit set may be larger than the base you are converting to. You may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through 'H'. 'A' .. 'Z' will support any base from 2 to 26.
+
+You may change back to the standard digit set at any time with:
+
+`sub reset-digits();` This will revert back to the default digit set and re-enable any routines disabled while custom digits were loaded.
 
 #### HASH ENCODED
 

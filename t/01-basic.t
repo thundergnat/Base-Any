@@ -2,15 +2,8 @@ use v6.c;
 use Test;
 use Base::Any;
 
-plan 734;
+plan 34;
 
-for ^10 {
-my $n = 1000.rand;
-    for 2..36 {
-        is $n.&to-base($_), $n.base($_), 'Tests ok against internal';
-        is $n.&to-base($_).&from-base($_), $n.base($_).parse-base($_), 'Tests ok against internal';
-    }
-}
 
 is 'R_a_k_u'.&from-base(62), 'Raku'.&from-base(62), 'Underscores in numeric strings ok';
 

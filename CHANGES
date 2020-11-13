@@ -1,18 +1,18 @@
-2020-04-23 V0.0.1 - Initial version. Bugs, but mostly works.
+2020-11-13 v0.1.0 - Fairly large changes semi breaking changes. Added built in capability to easily change out 
+                      digit set. Added routines set-digits() and reset-digits() to easily load / unload custom
+                      digit sets. Required fairly extensive modifications thoughout. Could no longer pass bases
+                      2-36 to inbuilt operators as the digit glyphs may change, so now likely returns results
+                      _slightly_ different in the lesser precision from inbuilt operators for Rationals / Nums.
+                    Modified testing to no longer test against inbuilts, add some excercising for loading
+                      / unloading custom digit sets. 
 
-2020-04-23 V0.0.2 - Mostly Doc fixes. Add build status image, fix typos, Expand docs a bit.
+2020-05-26 v0.0.7 - Limit precision while testing small base conversions. Getting ocassional failures.
 
-2020-04-24 V0.0.3 - Bug fix for array encoding negative numbers with positive radix.
-                    Clean up and rewrite major portions of the Docs. 
-                    Add testing for imaginary base numbers.
-                    Add testing for array and hash encoded numbers. 
-                    Add underscore capability for numeric strings.
-                    Add tests for numeric strings containing underscore.
-
-2020-04-24 V0.0.4 - Bug fix for array/hash encoding zero values incorrectly.
-                    Add tests for zero encoding.
-                    Made positive and negative encoding testing a little more forgiving of imprecision.
-                      Was getting sporatic failures in least significant digits of converted Rats.
+2020-04-26 V0.0.6 - Detect and fail when trying to convert Inf or Nan.
+                    Add tests for Inf and NaN.
+                    Add comment to Base::Any::Digits explaining how glyphs were selected.
+                    Expanded glyph set (from v0.0.5) allows for imaginary radicies up to ±67i; adjust limits accordingly.
+                    Various minor formatting / style tweaks
 
 2020-04-25 V0.0.5 - Made from-base() ignore case in bases -2 <-> -36 (similar to positive bases).
                     Added tests for ignore case in bases -2 <-> -36.
@@ -22,11 +22,23 @@
                     Expanded glyph set a bit (actually, realized that I had miscounted while... ⬋⬋⬋)
                     Added testing for out-of-range and threshold sized positive/negative radicies.
 
-2020-04-26 V0.0.6 - Detect and fail when trying to convert Inf or Nan.
-                    Add tests for Inf and NaN.
-                    Add comment to Base::Any::Digits explaining how glyphs were selected.
-                    Expanded glyph set (from v0.0.5) allows for imaginary radicies up to ±67i; adjust limits accordingly.
-                    Various minor formatting / style tweaks
+2020-04-24 V0.0.4 - Bug fix for array/hash encoding zero values incorrectly.
+                    Add tests for zero encoding.
+                    Made positive and negative encoding testing a little more forgiving of imprecision.
+                      Was getting sporatic failures in least significant digits of converted Rats.
 
-2020-05-26 v0.0.7 - Limit precision while testing small base conversions. Getting ocassional failures.
+2020-04-24 V0.0.3 - Bug fix for array encoding negative numbers with positive radix.
+                    Clean up and rewrite major portions of the Docs. 
+                    Add testing for imaginary base numbers.
+                    Add testing for array and hash encoded numbers. 
+                    Add underscore capability for numeric strings.
+                    Add tests for numeric strings containing underscore.
+
+2020-04-23 V0.0.2 - Mostly Doc fixes. Add build status image, fix typos, Expand docs a bit.
+
+2020-04-23 V0.0.1 - Initial version. Bugs, but mostly works.
+
+
+
+
 

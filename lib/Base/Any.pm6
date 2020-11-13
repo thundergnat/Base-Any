@@ -1,16 +1,41 @@
-use v6.c;
-unit module Base::Any:ver<0.0.7>;
+unit module Base::Any:ver<0.1.0>:auth<github:thundergnat>;
 
 use Base::Any::Digits; # import @__base-any-digits
 
 # Initially glyphs were generated on the fly. Saved to a file now for better startup speed
+# Also preserves character set as Unicode standard chhanges. This was generated under
+# Unicode 12.1. Unicode 13.0 added some characters in this range.
 #constant @__base-any-digits = (32 .. 125228).grep( {.chr ~~ /<:Lu>|<:Ll>|<:Nd>/} ).map( { .chr } ).unique; #4517
 
 my Int $threshold = +@__base-any-digits;
 
-# Common case is base 62: 0..9, A..Z, a..z
-my %active-base = @__base-any-digits[^62].pairs.invert;
+my $__digit-set-is-default = True;
 
+my @__digit-set = @__base-any-digits.clone;
+
+# Common case is base 62: 0..9, A..Z, a..z
+my %active-base = @__digit-set[^62].pairs.invert;
+
+####  set-digits multis  ######################################################
+
+sub reset-digits () is export {
+    $threshold = +@__base-any-digits;
+    @__digit-set = @__base-any-digits.clone;
+    %active-base = @__digit-set[^62].pairs.invert;
+    $__digit-set-is-default = True;
+}
+
+multi set-digits (@digits) is export {
+    die "There are non-unique digits in the set ({@digits}); reversability will be probematic." if +@digits.unique !== +@digits;
+    $threshold = +@digits;
+    @__digit-set = @digits.clone;
+    %active-base = @__digit-set.pairs.invert;
+    $__digit-set-is-default = False;
+}
+
+multi set-digits(Str $digits) is export {
+    samewith $digits.comb
+}
 
 ####  to-base multis   ########################################################
 
@@ -18,32 +43,25 @@ my %active-base = @__base-any-digits[^62].pairs.invert;
 multi to-base ( Any $num, Int $radix where * > $threshold ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
     die "Sorry, can not convert to base $radix, to-base() only handles up to base { $threshold - 1 }." ~
-        " Try to-base-array() or to-bash-hash() maybe?";
+        " Try to-base-array() or to-base-hash() maybe?";
  }
 
-
-# Normal base 2 <-> 36
-multi to-base ( Real $num, Int $radix where 1 < * < 37 ) is export {
+# Integer base 2 <-> 4516
+multi to-base ( Int $num, Int $radix where 1 < * <= $threshold ) is export {
     nan-inf($num) if $num === NaN or $num == Inf; # shouldn't be necessary for Int multis
-    $num.base($radix)
+    @__digit-set[$num.polymod( $radix xx * ).reverse].join || @__digit-set[0]
 }
 
 
-# Integer base 37 <-> 4516
-multi to-base ( Int $num, Int $radix where 36 < * <= $threshold ) is export {
-    nan-inf($num) if $num === NaN or $num == Inf; # shouldn't be necessary for Int multis
-    @__base-any-digits[$num.polymod( $radix xx * ).reverse].join || '0'
-}
-
-
-# Positive Real base 37 <-> 4516
-multi to-base ( Real $num, Int $radix where 36 < * <= $threshold, :$precision = -15 ) is export {
+# Positive Real base 2 <-> 4516
+multi to-base ( Real $num, Int $radix where 1 < * <= $threshold, :$precision = -15 ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
     my $sign = $num < 0 ?? '-' !! '';
     return '0' unless $num;
+    my $places = -(1_000_000_000.log($radix)) max $precision;
 
     # Adjust active glyph set if necessary
-    %active-base = @__base-any-digits[^$radix.abs].pairs.invert if +%active-base < $radix.abs;
+    %active-base = @__digit-set[^$radix.abs].pairs.invert if +%active-base < $radix.abs;
 
     my $value  = $num.abs;
     my $result = '';
@@ -51,11 +69,11 @@ multi to-base ( Real $num, Int $radix where 36 < * <= $threshold, :$precision = 
     my $lower-bound = 1 / $radix;
     my $upper-bound = $radix * $lower-bound;
     $value = $num.abs / $radix ** ++$place until $lower-bound <= $value < $upper-bound;
-    while ($value or $place > 0) and $place > $precision {
+    while ($value or $place > 0) and $place > $places {
         my $digit = ($radix * $value).Int;
         $value    =  $radix * $value - $digit;
         $result ~= '.' unless $place or $result.contains: '.';
-        $result ~= $digit == $radix ?? ($digit-1).&to-base($radix)~'0' !! $digit.&to-base($radix);
+        $result ~= $digit == $radix ?? ($digit-1).&to-base($radix)~@__digit-set[0] !! $digit.&to-base($radix);
         $place--
     }
     $sign ~ $result
@@ -66,10 +84,10 @@ multi to-base ( Real $num, Int $radix where 36 < * <= $threshold, :$precision = 
 multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision = -15 ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
     return '0' unless $num;
-
+    my $places = -(1_000_000_000.log(-$radix)) max $precision;
 
     # Adjust active glyph set if necessary
-    %active-base = @__base-any-digits[^$radix.abs].pairs.invert if +%active-base < -$radix;
+    %active-base = @__digit-set[^$radix.abs].pairs.invert if +%active-base < -$radix;
 
     my $value  = $num;
     my $result = '';
@@ -77,11 +95,11 @@ multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision =
     my $upper-bound = 1 / (-$radix + 1);
     my $lower-bound = $radix * $upper-bound;
     $value = $num / $radix ** ++$place until $lower-bound <= $value < $upper-bound;
-    while ($value or $place > 0) and $place > $precision {
+    while ($value or $place > 0) and $place > $places {
         my $digit = ($radix * $value - $lower-bound).Int;
         $value    =  $radix * $value - $digit;
         $result ~= '.' unless $place or $result.contains: '.';
-        $result ~= $digit == -$radix ?? ($digit-1).&to-base(-$radix)~'0' !! $digit.&to-base(-$radix);
+        $result ~= $digit == -$radix ?? ($digit-1).&to-base(-$radix)~@__digit-set[0] !! $digit.&to-base(-$radix);
         $place--
     }
     $result
@@ -91,6 +109,7 @@ multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision =
 # Imaginary radicies
 multi to-base ( Numeric $num, Complex $radix where *.re == 0, :$precision = -12 ) is export {
     die "Sorry. Only supports complex bases -67i through -2i and 2i through 67i." if 67 < $radix.abs or 1 > $radix.abs;
+    die "Sorry, imaginary bases only supported with default digit set" unless $__digit-set-is-default;
     nan-inf($num) if $num === NaN or $num == Inf;
     my ($re, $im) = $num.Complex.reals;
     my ($re-wh, $re-fr) =             $re.&to-base( -$radix.im².Int, :precision($precision) ).split: '.';
@@ -116,25 +135,19 @@ multi from-base ( Any $num, Int $radix where * > $threshold ) is export {
 }
 
 
-# Normal 2 - 36 "parse-base" conversion, let the system handle it
-multi from-base ( Str $str, Int $radix where 1 < * < 37 ) is export {
-    $str.subst('_', '', :g).parse-base($radix)
-}
-
-
 # All other real integer bases
-multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 36 < $_ <= $threshold } ) is export {
+multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 1 < $_ <= $threshold } ) is export {
     return -1 * $str.substr(1).&from-base($radix) if $str.substr(0,1) eq '-'; # illegal in negative bases
 
     $str.=subst('_', '', :g); # Ignore underscores
 
-    $str.=uc if -37 < $radix < -1;  # Ignore case if radix.abs < 37
+    $str.=uc if $radix.abs < 37 and $__digit-set-is-default;  # Ignore case if radix.abs < 37
 
     # Adjust active glyph set if necessary
-    %active-base = @__base-any-digits[^$radix.abs].pairs.invert if +%active-base < $radix.abs;
+    %active-base = @__digit-set[^$radix.abs].pairs.invert if +%active-base < $radix.abs;
 
     # Detect out-of-range glyphs
-    if my $k = $str.comb.first( { next if $_ eq '.'; !%active-base{$_}.defined or %active-base{$_} >= $radix.abs } ) {
+    if my $k = $str.comb.first( { next if $_ eq '.'; !%active-base{$_}.defined or ($__digit-set-is-default && %active-base{$_} >= $radix.abs) } ) {
         die "Cannot convert string to number: malformed base $radix number. " ~
             "Character out of range: '\e[32m{ $str.subst(/$k/, "\e[31m$k\e[32m") }\e[0m'"
     }
@@ -150,6 +163,7 @@ multi from-base ( Str $str is copy, Int $radix where {-$threshold <= $_ < -1 or 
 
 # Imaginary radicies
 multi from-base ( Str $str, Complex $radix where *.re == 0 ) is export {
+    die "Sorry, imaginary bases only supported with default digit set" unless $__digit-set-is-default;
     return -1 * $str.substr(1).&from-base($radix) if $str.substr(0,1) eq '-'; # technically illegal
 
     my ($whole, $frac, $die) = $str.subst('_', '', :g).split: '.';
@@ -303,6 +317,18 @@ say (2**256).&to-base-hash(10000);
 say (-2**256).&to-base-array(10000);
 # ( [-11 -5792 -892 -3731 -6195 -4235 -7098 -5008 -6879 -785 -3269 -9846 -6564 -564 -394 -5758 -4007 -9131 -2963 -9936], [0], 10000 )
 
+# Set a custom digit set
+
+set-digits('ABCDEFGHIJ');
+
+# or
+
+set-digits('A'..'Z');
+
+# Reset to default digit set
+
+reset-digits();
+
 =end code
 
 =head1 DESCRIPTION
@@ -356,8 +382,9 @@ file C<Base::Any::Digits>.
 
 =head5 CASE INSENSITIVITY
 
-Base::Any mimics the built-in operators in that bases with an absolute magnitude
-36 (-36) and below ignore case when converting C<from-base()>.
+As long as the default digit set is loaded Base::Any mimics the built-in
+operators, in that bases with an absolute magnitude 36 (-36) and below ignore
+case when converting C<from-base()>.
 
     'raku'.&from-base(36) == 'RAKU'.&from-base(36); # 76999005259948
 
@@ -366,9 +393,11 @@ and
     'raku'.&from-base(-36) == 'RAKU'.&from-base(-36); # 75428091766540
 
 
-For bases positive 2 through 36, Base::Any just hands off the transform to the
-built-in commands. A consequence to be aware of:  C<.&from-base().&to-base()> in
-radicies ±11 through ±36 may not round-trip to the same string.
+A consequence to be aware of:  C<.&from-base().&to-base()> in radicies ±11
+through ±36 may not round-trip to the same string.
+
+If a custom digit set is loaded, Base::Any makes no assumptions about case
+equivalence.
 
 
 =head5 UNDERSCORE SEPARATORS
@@ -398,6 +427,30 @@ or complex result.
 There is no support at this time for imaginary radices in the C<to-base-hash> or
 C<to-base-array> routines. The imaginary bases in general seem to be more of a
 curiosity than of any great use.
+
+=head4 CUSTOM DIGIT SETS
+
+If you want to use a custom, non-standard digit set, you may easily load a
+replacement set of glyphs to use for digits.
+
+C<sub set-digits(String)> or C<sub set-digits(List)> will alter the standard
+table of digits to whatever you pass in. There are some caveats.
+
+* The string (or list) may not have any repeated glyphs. Repeated glyphs would hinder reversibility.
+
+* Each element (for lists) must have only one character.
+
+* Custom digit sets disable imaginary base number routines. They are too fiddly to deal with possibly "out-of-order" characters.
+
+There is some error trapping but you are given a lot of leeway to shoot yourself in the foot.
+
+Note that the digit set may be larger than the base you are converting to. You
+may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through 'H'. 'A' .. 'Z' will support any base from 2 to 26.
+
+You may change back to the standard digit set at any time with:
+
+C<sub reset-digits();> This will revert back to the default digit set and re-enable
+any routines disabled while custom digits were loaded.
 
 
 =head4 HASH ENCODED
