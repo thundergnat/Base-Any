@@ -1,9 +1,9 @@
-unit module Base::Any:ver<0.1.0>:auth<github:thundergnat>;
+unit module Base::Any:ver<0.1.1>:auth<github:thundergnat>;
 
 use Base::Any::Digits; # import @__base-any-digits
 
 # Initially glyphs were generated on the fly. Saved to a file now for better startup speed
-# Also preserves character set as Unicode standard chhanges. This was generated under
+# Also preserves character set as Unicode standard changes. This was generated under
 # Unicode 12.1. Unicode 13.0 added some characters in this range.
 #constant @__base-any-digits = (32 .. 125228).grep( {.chr ~~ /<:Lu>|<:Ll>|<:Nd>/} ).map( { .chr } ).unique; #4517
 
@@ -26,7 +26,9 @@ sub reset-digits () is export {
 }
 
 multi set-digits (@digits) is export {
-    die "There are non-unique digits in the set ({@digits}); reversability will be probematic." if +@digits.unique !== +@digits;
+    die "There are non-unique digits in the set ({@digits.join(',')}); reversability will be probematic."
+      if +@digits.unique !== +@digits;
+    die 'Can not have multi-character "digits"' if any(@digits».chars) > 1;
     $threshold = +@digits;
     @__digit-set = @digits.clone;
     %active-base = @__digit-set.pairs.invert;
@@ -42,8 +44,8 @@ multi set-digits(Str $digits) is export {
 # Detect and die for radicies outside the threshold
 multi to-base ( Any $num, Int $radix where * > $threshold ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
-    die "Sorry, can not convert to base $radix, to-base() only handles up to base { $threshold - 1 }." ~
-        " Try to-base-array() or to-base-hash() maybe?";
+    die "Sorry, can not convert to base $radix; using this digit set, can only handle up to base { $threshold }." ~
+        " Try { 'expanding the digit set, or using ' unless $__digit-set-is-default }to-base-array() or to-base-hash() maybe?";
  }
 
 # Integer base 2 <-> 4516
@@ -131,7 +133,7 @@ multi to-base ( Numeric $num, Complex $radix where *.re == 0, :$precision = -12 
 
 # Detect and die for radicies outside the threshold
 multi from-base ( Any $num, Int $radix where * > $threshold ) is export {
-    die "Sorry, can not convert to base $radix, from-base() only handles up to base { $threshold - 1 }."
+    die "Sorry, can not convert from base $radix; using this digit set, can only handle up to base { $threshold }."
 }
 
 
@@ -323,7 +325,7 @@ set-digits('ABCDEFGHIJ');
 
 # or
 
-set-digits('A'..'Z');
+set-digits('A'..'J');
 
 # Reset to default digit set
 
@@ -349,11 +351,11 @@ bases -4516 through -2, imaginary bases -67i through -2i and 2i through 67i.
 
 The rather arbitrary threshold of 4516 was chosen because that is how many
 unique and discernible digit and letter glyphs are in the basic and first
-Unicode planes. (There's 4517 actually, but one of them needs to represent
-zero... and conveniently enough, it's 0) Punctuation, symbols, white-space and
-combining characters as digit glyphs are problematic when trying to round-trip
-an encoded number. Font coverage tends to get spotty in the higher Unicode
-planes as well.
+Unicode planes. (Under Unicode 12.1) (There's 4517 actually, but one of them
+needs to represent zero... and conveniently enough, it's 0) Punctuation,
+symbols, white-space and combining characters as digit glyphs are problematic
+when trying to round-trip an encoded number. Font coverage tends to get spotty
+in the higher Unicode planes as well.
 
 If 4516 bases is not enough, also provides array encoded numbers to nearly any
 imaginable magnitude integer base.
@@ -367,11 +369,16 @@ file C<Base::Any::Digits>.
 
     sub to-base(Real $number, Integer $radix, :$precision = -15)
 
-* Where $radix is ±2 through ±4516. Works with any Real type value, though Rats
-  and Nums will have limited precision in the less significant digits. You may
-  set a precision parameter if desired. Defaults to -15 (1e-15). Negative base
-  numbers are encoded to always produce a positive result. Technically, there is
-  no such thing as a negative Negative based number.
+* Where $radix is ±2 through ±4516.
+
+Works with any Real type value, though Rats and Nums will have limited precision
+in the least significant digits. You may set a precision parameter if desired.
+Defaults to -15 (1e-15). Converting a Rat or Num to a base and back likely will
+not return the exact same number. Some rounding will likely be necessary if that
+is critical.
+
+Negative base numbers are encoded to always produce a positive result.
+Technically, there is no such thing as a negative Negative based number.
 
 --
 
@@ -442,15 +449,36 @@ table of digits to whatever you pass in. There are some caveats.
 
 * Custom digit sets disable imaginary base number routines. They are too fiddly to deal with possibly "out-of-order" characters.
 
-There is some error trapping but you are given a lot of leeway to shoot yourself in the foot.
+There is some error trapping but you are given a lot of leeway to shoot yourself
+in the foot.
+
+The digit set order determines which character represents which number.
 
 Note that the digit set may be larger than the base you are converting to. You
-may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through 'H'. 'A' .. 'Z' will support any base from 2 to 26.
+may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through
+'H'. 'A' .. 'Z' will support any base from 2 to 26.
+
+The custom characters can be any valid Unicode character, even multibyte
+characters, as long as they are detected as a single character by Raku. They may
+be in any order, and from any Unicode block, as long as they are unique and
+discernable. It is highly reccomended that the characters be restricted to
+printable, standalone characters (no white-space, control, or combining
+characters) but it isn't forbidden. Do not be suprised if the standard routines
+do not deal well with them though.
+
+=begin code :lang<perl6>
+
+set-digits < 😟 😀 >;
+
+say 1234.5678.&to-base(2);
+
+# 😀😟😟😀😀😟😀😟😟😀😟.😀😟😟😀😟😟😟😀😟😀😟😀😀😟😀
+=end code
 
 You may change back to the standard digit set at any time with:
 
-C<sub reset-digits();> This will revert back to the default digit set and re-enable
-any routines disabled while custom digits were loaded.
+C<sub reset-digits();> This will revert back to the default digit set and
+re-enable any routines disabled while custom digits were loaded.
 
 
 =head4 HASH ENCODED
@@ -541,6 +569,7 @@ Steve Schulze (thundergnat)
 
 Copyright 2020 Steve Schulze
 
-This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
+This library is free software; you can redistribute it and/or modify it under
+the Artistic License 2.0.
 
 =end pod

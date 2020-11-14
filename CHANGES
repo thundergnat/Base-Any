@@ -1,3 +1,7 @@
+2020-11-14 v0.1.1 - Fix typos, enhance some error messages, fix off-by-one error in threshold reporting.
+                    Expand documentation for custom digits sets, show code example. Minor tweaks throughout.
+                    Add some more testing for custom digit set operations.
+
 2020-11-13 v0.1.0 - Fairly large changes semi breaking changes. Added built in capability to easily change out 
                       digit set. Added routines set-digits() and reset-digits() to easily load / unload custom
                       digit sets. Required fairly extensive modifications thoughout. Could no longer pass bases

@@ -56,7 +56,7 @@ set-digits('ABCDEFGHIJ');
 
 # or
 
-set-digits('A'..'Z');
+set-digits('A'..'J');
 
 # Reset to default digit set
 
@@ -72,7 +72,7 @@ Base::Any provides convenient tools to transform numbers to and from nearly any 
 
 For general base conversion, handles positive bases 2 through 4516, negative bases -4516 through -2, imaginary bases -67i through -2i and 2i through 67i.
 
-The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (There's 4517 actually, but one of them needs to represent zero... and conveniently enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
+The rather arbitrary threshold of 4516 was chosen because that is how many unique and discernible digit and letter glyphs are in the basic and first Unicode planes. (Under Unicode 12.1) (There's 4517 actually, but one of them needs to represent zero... and conveniently enough, it's 0) Punctuation, symbols, white-space and combining characters as digit glyphs are problematic when trying to round-trip an encoded number. Font coverage tends to get spotty in the higher Unicode planes as well.
 
 If 4516 bases is not enough, also provides array encoded numbers to nearly any imaginable magnitude integer base.
 
@@ -82,7 +82,11 @@ You may also choose to map the arrays to your own selection of glyphs to enumera
 
     sub to-base(Real $number, Integer $radix, :$precision = -15)
 
-* Where $radix is ±2 through ±4516. Works with any Real type value, though Rats and Nums will have limited precision in the less significant digits. You may set a precision parameter if desired. Defaults to -15 (1e-15). Negative base numbers are encoded to always produce a positive result. Technically, there is no such thing as a negative Negative based number.
+* Where $radix is ±2 through ±4516.
+
+Works with any Real type value, though Rats and Nums will have limited precision in the least significant digits. You may set a precision parameter if desired. Defaults to -15 (1e-15). Converting a Rat or Num to a base and back likely will not return the exact same number. Some rounding will likely be necessary if that is critical.
+
+Negative base numbers are encoded to always produce a positive result. Technically, there is no such thing as a negative Negative based number.
 
 --
 
@@ -134,7 +138,19 @@ If you want to use a custom, non-standard digit set, you may easily load a repla
 
 There is some error trapping but you are given a lot of leeway to shoot yourself in the foot.
 
+The digit set order determines which character represents which number.
+
 Note that the digit set may be larger than the base you are converting to. You may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through 'H'. 'A' .. 'Z' will support any base from 2 to 26.
+
+The custom characters can be any valid Unicode character, even multibyte characters, as long as they are detected as a single character by Raku. They may be in any order, and from any Unicode block, as long as they are unique and discernable. It is highly reccomended that the characters be restricted to printable, standalone characters (no white-space, control, or combining characters) but it isn't forbidden. Do not be suprised if the standard routines do not deal well with them though.
+
+```perl6
+set-digits < 😟 😀 >;
+
+say 1234.5678.&to-base(2);
+
+# 😀😟😟😀😀😟😀😟😟😀😟.😀😟😟😀😟😟😟😀😟😀😟😀😀😟😀
+```
 
 You may change back to the standard digit set at any time with:
 
