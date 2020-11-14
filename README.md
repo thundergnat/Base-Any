@@ -142,7 +142,7 @@ The digit set order determines which character represents which number.
 
 Note that the digit set may be larger than the base you are converting to. You may load 'A' .. 'Z', but then convert to base 8 which would only use 'A' through 'H'. 'A' .. 'Z' will support any base from 2 to 26.
 
-The custom characters can be any valid Unicode character, even multibyte characters, as long as they are detected as a single character by Raku. They may be in any order, and from any Unicode block, as long as they are unique and discernable. It is highly reccomended that the characters be restricted to printable, standalone characters (no white-space, control, or combining characters) but it isn't forbidden. Do not be suprised if the standard routines do not deal well with them though.
+The custom characters can be any valid Unicode character, even multibyte characters, as long as they are detected as a single character by Raku. They may be in any order, and from any Unicode block, as long as they are unique and discernable. It is highly recommended that the characters be restricted to printable, standalone characters (no white-space, control, or combining characters) but it isn't forbidden. Do not be suprised if the standard routines do not deal well with them though.
 
 ```perl6
 set-digits < 😟 😀 >;
