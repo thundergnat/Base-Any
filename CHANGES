@@ -1,3 +1,7 @@
+2020-11-15 v0.1.2 - Fix error where zero values were not being converted properly in some cases when custom
+                      digit sets were loaded.
+                    Add tests to excercise zero conversion when custom digits are loaded.
+
 2020-11-14 v0.1.1 - Fix typos, enhance some error messages, fix off-by-one error in threshold reporting.
                     Expand documentation for custom digits sets, show code example. Minor tweaks throughout.
                     Add some more testing for custom digit set operations.

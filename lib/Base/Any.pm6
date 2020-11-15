@@ -1,4 +1,4 @@
-unit module Base::Any:ver<0.1.1>:auth<github:thundergnat>;
+unit module Base::Any:ver<0.1.2>:auth<github:thundergnat>;
 
 use Base::Any::Digits; # import @__base-any-digits
 
@@ -59,7 +59,7 @@ multi to-base ( Int $num, Int $radix where 1 < * <= $threshold ) is export {
 multi to-base ( Real $num, Int $radix where 1 < * <= $threshold, :$precision = -15 ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
     my $sign = $num < 0 ?? '-' !! '';
-    return '0' unless $num;
+    return @__digit-set[0] unless $num;
     my $places = -(1_000_000_000.log($radix)) max $precision;
 
     # Adjust active glyph set if necessary
@@ -85,7 +85,7 @@ multi to-base ( Real $num, Int $radix where 1 < * <= $threshold, :$precision = -
 # Negative Real base -4516 <-> -2
 multi to-base ( Real $num, Int $radix where -$threshold <= * < -1, :$precision = -15 ) is export {
     nan-inf($num) if $num === NaN or $num == Inf;
-    return '0' unless $num;
+    return @__digit-set[0] unless $num;
     my $places = -(1_000_000_000.log(-$radix)) max $precision;
 
     # Adjust active glyph set if necessary
